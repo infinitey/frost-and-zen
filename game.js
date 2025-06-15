@@ -945,8 +945,9 @@ performScan(clickX, clickY) {
                 voxel.revealed = true;
             }
         });
-        
-        const stars = Math.max(0, 3 - this.glassBroken);
+        // Calculate stars based on glass damage (broken OR cracked)
+        const glassDamage = this.calculateGlassDamage();
+        const stars = Math.max(0, 3 - glassDamage);
         const completion = document.getElementById('completion');
         const finalStars = document.getElementById('finalStars');
         const completionText = document.getElementById('completionText');
@@ -961,10 +962,37 @@ performScan(clickX, clickY) {
             completionText.textContent = 'Perfect! Sculpture saved to gallery.';
             this.saveSculpture(stars);
         } else {
-            completionText.textContent = `${this.glassBroken} glass voxel(s) broken. Try again for a perfect score!`;
+            const crackedGlass = glassDamage - this.glassBroken;
+            let message = '';
+            if (this.glassBroken > 0 && crackedGlass > 0) {
+                message = `${this.glassBroken} glass cube(s) broken, ${crackedGlass} cracked. Perfect score requires no glass damage!`;
+            } else if (this.glassBroken > 0) {
+                message = `${this.glassBroken} glass cube(s) broken. Perfect score requires no glass damage!`;
+            } else if (crackedGlass > 0) {
+                message = `${crackedGlass} glass cube(s) cracked. Perfect score requires no glass damage!`;
+            }
+            completionText.textContent = message;
         }
         
         this.audioManager.playVictorySound();
+    }
+calculateGlassDamage() {
+        let glassDamage = 0;
+        
+        this.voxels.forEach(voxel => {
+            if (voxel.material === 'glass' && voxel.visible) {
+                // Count broken glass cubes
+                if (!voxel.visible || voxel.taps >= 3) {
+                    glassDamage++;
+                }
+                // Count cracked glass cubes (any taps > 0 but not broken)
+                else if (voxel.taps > 0) {
+                    glassDamage++;
+                }
+            }
+        });
+        
+        return glassDamage;
     }
     
     saveSculpture(stars) {
