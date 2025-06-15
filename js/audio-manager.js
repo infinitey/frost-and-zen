@@ -1,6 +1,8 @@
 class AudioManager {
     constructor() {
         this.audioContext = null;
+        this.backgroundMusic = null;
+        this.musicGainNode = null;
         this.initAudio();
     }
     
@@ -12,8 +14,18 @@ class AudioManager {
         }
     }
     
-    playSound(frequency, duration, type = 'sine') {
+    async playSound(frequency, duration, type = 'sine') {
         if (!this.audioContext) return;
+        
+        // Resume audio context if suspended
+        if (this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+            } catch (e) {
+                console.log('Failed to resume audio context for sound:', e);
+                return;
+            }
+        }
         
         const oscillator = this.audioContext.createOscillator();
         const gainNode = this.audioContext.createGain();
@@ -81,5 +93,93 @@ class AudioManager {
     
     playVictorySound() {
         this.playSound(523, 0.5); // Victory sound
+    }
+    
+    async startBackgroundMusic() {
+        if (!this.audioContext || this.backgroundMusic) return;
+        
+        // Resume audio context if suspended (required by modern browsers)
+        if (this.audioContext.state === 'suspended') {
+            try {
+                await this.audioContext.resume();
+                console.log('Audio context resumed');
+            } catch (e) {
+                console.log('Failed to resume audio context:', e);
+                return;
+            }
+        }
+        
+        // Create a soothing ambient background music
+        this.musicGainNode = this.audioContext.createGain();
+        this.musicGainNode.connect(this.audioContext.destination);
+        this.musicGainNode.gain.setValueAtTime(0.15, this.audioContext.currentTime); // Slightly louder for testing
+        
+        // Create multiple oscillators for a rich, ambient sound
+        this.createAmbientLayer(220, 'sine', 0.05); // Low drone - louder for testing
+        this.createAmbientLayer(330, 'sine', 0.04); // Mid harmony
+        this.createAmbientLayer(440, 'triangle', 0.03); // High shimmer
+        
+        // Add subtle variations
+        setTimeout(() => this.createAmbientLayer(165, 'sine', 0.03), 2000);
+        setTimeout(() => this.createAmbientLayer(495, 'triangle', 0.02), 4000);
+        
+        console.log('Background music started');
+    }
+    
+    createAmbientLayer(baseFreq, type, volume) {
+        if (!this.audioContext || !this.musicGainNode) return;
+        
+        const oscillator = this.audioContext.createOscillator();
+        const layerGain = this.audioContext.createGain();
+        
+        oscillator.connect(layerGain);
+        layerGain.connect(this.musicGainNode);
+        
+        oscillator.frequency.setValueAtTime(baseFreq, this.audioContext.currentTime);
+        oscillator.type = type;
+        
+        // Set volume with subtle fade-in
+        layerGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+        layerGain.gain.linearRampToValueAtTime(volume, this.audioContext.currentTime + 2);
+        
+        // Add subtle frequency modulation for organic feel
+        const lfo = this.audioContext.createOscillator();
+        const lfoGain = this.audioContext.createGain();
+        lfo.connect(lfoGain);
+        lfoGain.connect(oscillator.frequency);
+        
+        lfo.frequency.setValueAtTime(0.1 + Math.random() * 0.2, this.audioContext.currentTime);
+        lfo.type = 'sine';
+        lfoGain.gain.setValueAtTime(2 + Math.random() * 3, this.audioContext.currentTime);
+        
+        oscillator.start(this.audioContext.currentTime);
+        lfo.start(this.audioContext.currentTime);
+        
+        // Store reference for cleanup
+        if (!this.backgroundMusic) this.backgroundMusic = [];
+        this.backgroundMusic.push({ oscillator, lfo });
+    }
+    
+    stopBackgroundMusic() {
+        if (!this.backgroundMusic) return;
+        
+        // Fade out music gracefully
+        if (this.musicGainNode) {
+            this.musicGainNode.gain.linearRampToValueAtTime(0, this.audioContext.currentTime + 1);
+        }
+        
+        // Stop all oscillators after fade
+        setTimeout(() => {
+            this.backgroundMusic.forEach(layer => {
+                try {
+                    layer.oscillator.stop();
+                    layer.lfo.stop();
+                } catch (e) {
+                    // Oscillator might already be stopped
+                }
+            });
+            this.backgroundMusic = null;
+            this.musicGainNode = null;
+        }, 1100);
     }
 }

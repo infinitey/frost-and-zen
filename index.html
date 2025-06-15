@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sculpted Silence - Web Game Demo</title>
+    <title>Frost and Zen - Web Game Demo</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="game-container">
         <div class="game-header">
-            <h1>Sculpted Silence</h1>
+            <h1>Frost and Zen</h1>
             <div id="sculptureHint" class="sculpture-hint">Level 1: Simple Cube</div>
             <div class="game-stats">
                 <div class="stat">
@@ -50,6 +50,28 @@
                     <button id="startBtn" class="btn btn-primary">Start New Sculpture</button>
                     <button id="resetBtn" class="btn btn-secondary">Reset Level</button>
                     <button id="galleryBtn" class="btn btn-tertiary">View Gallery</button>
+                </div>
+                
+                <!-- Toolbar for tools/abilities -->
+                <div class="toolbar">
+                    <div class="tool-tooltip" id="toolTooltip"></div>
+                    <div class="tool-item" id="advancedIcepick" title="Advanced Icepick - Chain breaking for next 3 taps">
+                        <div class="tool-icon">⛏️</div>
+                        <div class="tool-counter" id="icepickCounter">2</div>
+                        <div class="tool-charges" id="icepickCharges">0</div>
+                    </div>
+                    <div class="tool-item" id="unstableConverter" title="Unstable Converter - Convert random ice cube to explosive">
+                        <div class="tool-icon">💥</div>
+                        <div class="tool-counter" id="converterCounter">2</div>
+                    </div>
+                    <div class="tool-item" id="iceScanner" title="Ice Scanner - Reveals cube contents in 3x3 area">
+                        <div class="tool-icon">🔍</div>
+                        <div class="tool-counter" id="scannerCounter">2</div>
+                    </div>
+                    <div class="tool-item" id="iceMagnet" title="Ice Magnet - Pulls loose ice cubes toward target point">
+                        <div class="tool-icon">🧲</div>
+                        <div class="tool-counter" id="magnetCounter">2</div>
+                    </div>
                 </div>
             </div>
         </div>

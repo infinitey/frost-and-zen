@@ -106,25 +106,44 @@ class Renderer {
             }
             this.ctx.closePath();
             
-            // Apply fill with shine effect if recently tapped
+            // Apply special effects
+            let finalR = r, finalG = g, finalB = b, finalAlpha = alpha;
+            
+            // Scanner effect - blue X-ray glow
+            if (voxel.scanned && voxel.scanTime && Date.now() - voxel.scanTime < 3000) {
+                const scanIntensity = 1 - (Date.now() - voxel.scanTime) / 3000;
+                finalR = Math.min(255, r + 100 * scanIntensity);
+                finalG = Math.min(255, g + 150 * scanIntensity);
+                finalB = Math.min(255, b + 255 * scanIntensity);
+                finalAlpha = Math.min(1, alpha + 0.3 * scanIntensity);
+            }
+            
+            // Magnet effect - purple magnetic glow
+            if (voxel.magnetized && voxel.magnetTime && Date.now() - voxel.magnetTime < 2000) {
+                const magnetIntensity = 1 - (Date.now() - voxel.magnetTime) / 2000;
+                finalR = Math.min(255, r + 150 * magnetIntensity);
+                finalG = Math.min(255, g + 50 * magnetIntensity);
+                finalB = Math.min(255, b + 200 * magnetIntensity);
+                finalAlpha = Math.min(1, alpha + 0.2 * magnetIntensity);
+            }
+            
+            // Tap shine effect (highest priority)
             if (voxel.lastTapped && Date.now() - voxel.lastTapped < 300) {
                 const shineIntensity = 1 - (Date.now() - voxel.lastTapped) / 300;
                 if (voxel.material === 'ice') {
                     // Blue shine for ice
-                    const shineR = Math.min(255, r + 50 * shineIntensity);
-                    const shineG = Math.min(255, g + 100 * shineIntensity);
-                    const shineB = Math.min(255, b + 150 * shineIntensity);
-                    this.ctx.fillStyle = `rgba(${shineR}, ${shineG}, ${shineB}, ${alpha})`;
+                    finalR = Math.min(255, finalR + 50 * shineIntensity);
+                    finalG = Math.min(255, finalG + 100 * shineIntensity);
+                    finalB = Math.min(255, finalB + 150 * shineIntensity);
                 } else {
                     // Golden shine for glass
-                    const shineR = Math.min(255, r + 100 * shineIntensity);
-                    const shineG = Math.min(255, g + 80 * shineIntensity);
-                    const shineB = Math.min(255, b + 20 * shineIntensity);
-                    this.ctx.fillStyle = `rgba(${shineR}, ${shineG}, ${shineB}, ${alpha})`;
+                    finalR = Math.min(255, finalR + 100 * shineIntensity);
+                    finalG = Math.min(255, finalG + 80 * shineIntensity);
+                    finalB = Math.min(255, finalB + 20 * shineIntensity);
                 }
-            } else {
-                this.ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
             }
+            
+            this.ctx.fillStyle = `rgba(${finalR}, ${finalG}, ${finalB}, ${finalAlpha})`;
             this.ctx.fill();
             
             this.ctx.strokeStyle = strokeColor;
